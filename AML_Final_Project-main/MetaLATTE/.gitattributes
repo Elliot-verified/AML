@@ -1,0 +1,7 @@
+# LFS disabled so push works when repo was moved without LFS objects.
+# Force filter unset so these are stored as normal blobs, not LFS.
+*.bin !filter
+*.png !filter
+figures/*.png !filter
+model/*.bin !filter
+pytorch_model.bin !filter

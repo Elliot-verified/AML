@@ -1,0 +1,1 @@
+This is a repository to manage an applied machine learning project that leverages PepMLM and a model from the Chatterjee Lab called MetaLATTE. 
