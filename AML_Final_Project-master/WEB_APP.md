@@ -6,16 +6,17 @@ A scientist can configure pipeline parameters (topk, max_len, fraction_mask, n_v
 
 ### `ValueError: numpy.dtype size changed, Expected 96 from C header, got 88`
 
-Your env has numpy 1.x (88) but something (pandas/matplotlib) was built for numpy 2.x (96). Align everything to **numpy 2.x**:
+The traceback often points at **sklearn** (via `transformers` → `sklearn.metrics.roc_curve`). Your env has numpy 1.x (88) but scikit-learn (or pandas/matplotlib) was built for numpy 2.x (96). You're likely in **Anaconda base** (`/opt/anaconda3/`). Two options:
+
+**Option A — Fix conda base (quick):**
 
 ```bash
-source .venv/bin/activate   # or conda activate your_env
 pip install -U "numpy>=2"
-pip install --force-reinstall pandas matplotlib
+pip install --force-reinstall scikit-learn pandas matplotlib
 streamlit run streamlit_app.py
 ```
 
-If that still errors, do a **clean venv** and install in order (numpy 2 first, then the rest):
+**Option B — Use the project venv (recommended so conda doesn't mix in):**
 
 ```bash
 cd AML_Final_Project-master
@@ -28,6 +29,19 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-web-lite.txt
 streamlit run streamlit_app.py
 ```
+
+**Code change:** Heavy imports (torch, transformers, Bio) are now deferred to when you click "Run pipeline", so the **Streamlit UI should load** even if numpy/sklearn are mismatched. You'll only see the error when you actually run the pipeline.
+
+**If you see `numpy.core.multiarray failed to import` (often from pyarrow/sklearn):** Your Python is loading packages from **Anaconda base** (`/opt/anaconda3/`). Conda's numpy, sklearn, and pyarrow are binary-incompatible with each other or with pip-installed packages. **Fix: use the project venv only**, so the app never uses conda's stack:
+
+```bash
+cd AML_Final_Project-master
+bash setup_venv.sh
+source .venv/bin/activate
+streamlit run streamlit_app.py
+```
+
+Always **activate .venv** before `streamlit run`; don't run from conda base.
 
 ### `ImportError: numpy.core.multiarray failed to import`
 

@@ -16,20 +16,32 @@ Delete other large files or old virtual envs if you need more space.
 
 ---
 
-## Step 2: Create a venv and install (lite = CPU-only, smaller install)
+## Step 2: Create a venv and install (do not use Anaconda base)
+
+**Important:** If you use Anaconda, run the app from the **project venv**, not `conda base`. Conda’s numpy/sklearn/pyarrow often cause “numpy.core.multiarray failed to import” when mixed with pip.
+
+**Option A — One script (recommended):**
 
 ```bash
 cd AML_Final_Project-master
+bash setup_venv.sh
+source .venv/bin/activate
+```
+
+**Option B — Manual:**
+
+```bash
+cd AML_Final_Project-master
+rm -rf .venv
 python3 -m venv .venv
 source .venv/bin/activate
-# Windows:  .venv\Scripts\activate
-
 pip install --upgrade pip
+pip install "numpy>=2"
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-web-lite.txt
 ```
 
-If you have plenty of disk and want GPU support, use `pip install torch` (no `--index-url`) and `pip install -r requirements-web.txt` instead.
+Then always run Streamlit with the venv activated (not conda).
 
 ---
 

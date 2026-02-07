@@ -1,14 +1,18 @@
 # pepmlm_generate_fast.py
-import math, random, re, sys, time
-from typing import List, Set, Tuple
+# Heavy imports (torch, transformers, Bio) are inside run_pepmlm() so the app
+# can load without pulling in sklearn/numpy from transformers.
+import math
+import random
+import re
+import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Set
 
-from Bio import SeqIO
-import torch
-from transformers import AutoTokenizer, AutoModelForMaskedLM
-
-MODEL_DIR = "PepMLM_local"
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_MODEL_DIR = _PROJECT_ROOT / "PepMLM_local"
+HF_MODEL_ID = "ChatterjeeLab/PepMLM-650M"
 
 AA_ALLOWED = set("ACDEFGHIKLMNPQRSTVWY")
 
@@ -43,6 +47,7 @@ def make_masked(seq: str, positions: List[int], mask_token: str) -> str:
     return "".join(chars)
 
 def fill_masks_batch(tokenizer, model, masked_texts: List[str], topk: int) -> List[str]:
+    import torch
     device = next(model.parameters()).device
     enc = tokenizer(masked_texts, return_tensors="pt", padding=True).to(device)
     with torch.inference_mode():
@@ -102,11 +107,22 @@ def generate_variants_for_seed(
     return variants_out
 
 def run_pepmlm(cfg: PepMLMConfig) -> None:
-    log("loading PepMLM model/tokenizer…")
-    tok = AutoTokenizer.from_pretrained(MODEL_DIR, local_files_only=True)
-    mdl = AutoModelForMaskedLM.from_pretrained(MODEL_DIR, local_files_only=True)
+    from Bio import SeqIO
+    import torch
+    from transformers import AutoTokenizer, AutoModelForMaskedLM
+
+    use_local = DEFAULT_MODEL_DIR.is_dir() and (DEFAULT_MODEL_DIR / "config.json").exists()
+    if use_local:
+        log("loading PepMLM model/tokenizer from local dir…")
+        tok = AutoTokenizer.from_pretrained(str(DEFAULT_MODEL_DIR), local_files_only=True)
+        mdl = AutoModelForMaskedLM.from_pretrained(str(DEFAULT_MODEL_DIR), local_files_only=True)
+    else:
+        log(f"loading PepMLM from Hugging Face ({HF_MODEL_ID}); first run may download ~2.3 GB")
+        tok = AutoTokenizer.from_pretrained(HF_MODEL_ID)
+        mdl = AutoModelForMaskedLM.from_pretrained(HF_MODEL_ID)
+
     device = "cuda" if torch.cuda.is_available() else (
-        "mps" if torch.backends.mps.is_available() else "cpu"
+        "mps" if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available() else "cpu"
     )
     mdl.to(device).eval()
     torch.set_num_threads(max(1, min(4, torch.get_num_threads())))
