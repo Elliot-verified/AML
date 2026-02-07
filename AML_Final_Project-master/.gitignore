@@ -1,0 +1,9 @@
+MetaLATTE/
+esm2_local/
+PepMLM_local/
+.hf/
+.venv/
+outputs/
+__pycache__/
+corp-plus-certifi.pem
+git-lfs-3.7.1/

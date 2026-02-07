@@ -1,0 +1,50 @@
+
+
+## 📦 1. Install Python Requirements
+
+```bash
+pip3 install -r requirements.txt
+pip3 install torch transformers accelerate biopython
+````
+## 📥 3. Install Git LFS (User-Space, No sudo)
+
+Git LFS is required for downloading large model weights from HuggingFace.
+
+From the project root:
+
+```bash
+tar -xvzf git-lfs-linux-amd64-v3.7.1.tar.gz
+cd git-lfs-3.7.1
+
+# Install to user bin directory (no sudo needed)
+mkdir -p ~/bin
+cp git-lfs ~/bin/
+
+# Add to PATH
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+export PATH="$HOME/bin:$PATH"
+
+# Verify installation
+git lfs version
+git lfs install
+```
+
+From the project root:
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive
+git lfs pull
+```
+
+This will pull:
+
+* **MetaLATTE**
+* **facebookresearch/esm**
+* **esm2_t33_650M_UR50D** (HuggingFace, LFS)
+
+You can confirm everything is initialized:
+
+```bash
+git submodule status
+```

@@ -1,0 +1,13 @@
+{
+  "name": "run_topk_5",
+  "out_dir": "notebook_runs/run_topk_5",
+  "pepmlm_params": {
+    "n_variants_per_seed": 20,
+    "fraction_mask": 0.25,
+    "topk_per_mask": 5,
+    "max_len": 200,
+    "batch_size": 8
+  },
+  "novelty_identity_threshold": 0.95,
+  "top_k_variants": 999999
+}

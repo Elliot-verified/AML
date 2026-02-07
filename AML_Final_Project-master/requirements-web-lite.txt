@@ -1,0 +1,18 @@
+# Lite install for limited disk (CPU-only PyTorch, no CUDA).
+# Run from project root with venv activated.
+#
+# 1. Create venv and install CPU-only PyTorch first (saves ~2GB vs full torch):
+#    pip install torch --index-url https://download.pytorch.org/whl/cpu
+#
+# 2. Then install the rest:
+#    pip install -r requirements-web-lite.txt
+#
+# Use numpy 2.x so compiled extensions (pandas/matplotlib) match. If you see
+# "numpy.dtype size changed, Expected 96... got 88", reinstall: pip install -U "numpy>=2" && pip install --force-reinstall pandas matplotlib
+numpy>=2
+streamlit>=1.28.0
+transformers
+accelerate
+biopython
+pandas
+matplotlib
