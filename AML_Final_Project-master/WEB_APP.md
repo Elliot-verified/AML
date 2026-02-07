@@ -4,24 +4,29 @@ A scientist can configure pipeline parameters (topk, max_len, fraction_mask, n_v
 
 ## Troubleshooting
 
-### `ValueError: numpy.dtype size changed, may indicate binary incompatibility`
+### `ValueError: numpy.dtype size changed, Expected 96 from C header, got 88`
 
-Some package (e.g. pandas or matplotlib) was built against a different numpy version than the one installed. Reinstall numpy first, then packages that use it:
+Your env has numpy 1.x (88) but something (pandas/matplotlib) was built for numpy 2.x (96). Align everything to **numpy 2.x**:
 
 ```bash
-pip install --upgrade --force-reinstall numpy
+source .venv/bin/activate   # or conda activate your_env
+pip install -U "numpy>=2"
 pip install --force-reinstall pandas matplotlib
 streamlit run streamlit_app.py
 ```
 
-If it still fails, use a **fresh venv** and install in this order so everything matches:
+If that still errors, do a **clean venv** and install in order (numpy 2 first, then the rest):
 
 ```bash
-rm -rf .venv && python3 -m venv .venv && source .venv/bin/activate
+cd AML_Final_Project-master
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
 pip install --upgrade pip
-pip install "numpy>=1.26,<2"
+pip install "numpy>=2"
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-web-lite.txt
+streamlit run streamlit_app.py
 ```
 
 ### `ImportError: numpy.core.multiarray failed to import`
