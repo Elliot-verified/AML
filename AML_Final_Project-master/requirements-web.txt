@@ -1,0 +1,7 @@
+# Install for the Streamlit web app (on top of base env or requirements.txt)
+# pip install -r requirements.txt -r requirements-web.txt
+streamlit>=1.28.0
+torch
+transformers
+accelerate
+biopython
