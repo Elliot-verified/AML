@@ -1,0 +1,9 @@
+# Virtual env (large)
+.venv/
+
+# Generated pipeline outputs (can be large / slow to read)
+AML_Final_Project-master/PepMLM_Outputs/
+AML_Final_Project-master/outputs/
+
+# OS
+.DS_Store
