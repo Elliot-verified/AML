@@ -11,6 +11,7 @@ Requires: PepMLM_local, MetaLATTE and ESM2 dirs (see WEB_APP.md).
 from pathlib import Path
 import tempfile
 import sys
+from typing import Optional
 
 import streamlit as st
 import pandas as pd
@@ -57,7 +58,7 @@ seed_source = st.radio(
     horizontal=True,
 )
 
-seed_path: Path | None = None
+seed_path: Optional[Path] = None
 if seed_source == "Use a predefined seed file":
     if not predefined:
         st.warning("No predefined seeds found under `PepMLM_seeds/`. Upload a FASTA or add files there.")

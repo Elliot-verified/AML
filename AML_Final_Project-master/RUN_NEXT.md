@@ -20,12 +20,19 @@ Delete other large files or old virtual envs if you need more space.
 
 **Important:** If you use Anaconda, run the app from the **project venv**, not `conda base`. Conda’s numpy/sklearn/pyarrow often cause “numpy.core.multiarray failed to import” when mixed with pip.
 
-**Option A — One script (recommended):**
+**Option A — One script (recommended):**  
+If you already have a `.venv` that’s broken (e.g. “No module named streamlit” or pip errors), remove it first:
 
 ```bash
 cd AML_Final_Project-master
+rm -rf .venv
 bash setup_venv.sh
-source .venv/bin/activate
+```
+
+Then run the app with:
+
+```bash
+.venv/bin/python -m streamlit run streamlit_app.py
 ```
 
 **Option B — Manual:**
@@ -41,17 +48,28 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-web-lite.txt
 ```
 
-Then always run Streamlit with the venv activated (not conda).
-
 ---
 
-## Step 3: Launch the web app
+## Step 3: Launch the web app (use the launcher so you don’t use Anaconda by mistake)
+
+**Use this so Python is always the venv’s (avoids conda’s numpy/sklearn):**
+
+```bash
+cd AML_Final_Project-master
+bash run_app.sh
+```
+
+That runs `.venv/bin/python -m streamlit run streamlit_app.py` for you. No need to `source .venv/bin/activate` first.
+
+**If you prefer to activate yourself:**
 
 ```bash
 cd AML_Final_Project-master
 source .venv/bin/activate
 streamlit run streamlit_app.py
 ```
+
+Check that you’re in the venv: `which python` should show `.../AML_Final_Project-master/.venv/bin/python`, not `/opt/anaconda3/...`.
 
 Open the URL shown (e.g. **http://localhost:8501**). You’ll see the form to choose seeds and set parameters.
 

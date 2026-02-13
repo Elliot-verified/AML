@@ -1,1 +1,3 @@
 PepMLM_local/
+# Keep shell scripts with LF so bash works (no CRLF)
+*.sh text eol=lf

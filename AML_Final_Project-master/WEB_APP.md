@@ -32,16 +32,15 @@ streamlit run streamlit_app.py
 
 **Code change:** Heavy imports (torch, transformers, Bio) are now deferred to when you click "Run pipeline", so the **Streamlit UI should load** even if numpy/sklearn are mismatched. You'll only see the error when you actually run the pipeline.
 
-**If you see `numpy.core.multiarray failed to import` (often from pyarrow/sklearn):** Your Python is loading packages from **Anaconda base** (`/opt/anaconda3/`). Conda's numpy, sklearn, and pyarrow are binary-incompatible with each other or with pip-installed packages. **Fix: use the project venv only**, so the app never uses conda's stack:
+**If you see `numpy.core.multiarray failed to import` (often from pyarrow/sklearn):** Your Python is loading packages from **Anaconda base** (`/opt/anaconda3/`). Conda's numpy, sklearn, and pyarrow are binary-incompatible with each other or with pip-installed packages. **Fix: use the project venv only**, so the app never uses conda's stack. Easiest is the **launcher** (it uses the venv’s Python no matter what your shell is):
 
 ```bash
 cd AML_Final_Project-master
-bash setup_venv.sh
-source .venv/bin/activate
-streamlit run streamlit_app.py
+bash setup_venv.sh    # once
+bash run_app.sh       # every time you want to run the app
 ```
 
-Always **activate .venv** before `streamlit run`; don't run from conda base.
+`run_app.sh` runs `.venv/bin/python -m streamlit run streamlit_app.py`, so you never accidentally use Anaconda’s Python. Don’t run `streamlit run streamlit_app.py` from a conda-activated shell unless you’re sure `which python` points at `.venv/bin/python`.
 
 ### `ImportError: numpy.core.multiarray failed to import`
 

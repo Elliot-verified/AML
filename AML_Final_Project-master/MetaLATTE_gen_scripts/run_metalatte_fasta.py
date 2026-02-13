@@ -3,6 +3,7 @@
 
 import os, sys, csv, traceback
 from pathlib import Path
+from typing import Optional
 import importlib.util, importlib.machinery
 import lightning
 
@@ -346,7 +347,7 @@ def run_batch(tokenizer, model, seqs, device, max_len=1022):
     return probs
 
 # ------------- id2label utilities -------------
-def _dense_from_id2label(d: dict, n_expected: int | None = None):
+def _dense_from_id2label(d: dict, n_expected: Optional[int] = None):
     keys_int = {int(k) if not isinstance(k, int) else k for k in d.keys()}
     n = (max(keys_int) + 1) if n_expected is None else n_expected
     out = [None] * n
@@ -354,7 +355,7 @@ def _dense_from_id2label(d: dict, n_expected: int | None = None):
         out[int(k)] = v
     return out
 
-def _dense_from_label2id(d: dict, n_expected: int | None = None):
+def _dense_from_label2id(d: dict, n_expected: Optional[int] = None):
     n = (max(int(v) for v in d.values()) + 1) if n_expected is None else n_expected
     out = [None] * n
     for lab, idx in d.items():

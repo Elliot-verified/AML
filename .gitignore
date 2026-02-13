@@ -4,6 +4,7 @@
 # Generated pipeline outputs (can be large / slow to read)
 AML_Final_Project-master/PepMLM_Outputs/
 AML_Final_Project-master/outputs/
+AML_Final_Project-master/pipeline_runs/
 
 # OS
 .DS_Store
