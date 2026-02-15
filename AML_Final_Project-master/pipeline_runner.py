@@ -1,12 +1,17 @@
 """
 Parameterized pipeline runner for use by CLI or web app.
 Runs: PepMLM (generate variants) → MetaLATTE (predict binding) → analyze & plot.
+
+CLI: python -m pipeline_runner <config.json>
+  (config.json has seed_fasta, work_dir paths as strings + pipeline params)
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+import sys
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -24,6 +29,21 @@ class PipelineConfig:
     max_len: int = 400
     batch_size: int = 8
     top_k: int = 20  # how many top binders to keep and plot
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for JSON (paths as strings)."""
+        d = asdict(self)
+        d["seed_fasta"] = str(Path(self.seed_fasta).resolve())
+        d["work_dir"] = str(Path(self.work_dir).resolve())
+        return d
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> PipelineConfig:
+        """Load from dict (e.g. from JSON)."""
+        d = dict(d)
+        d["seed_fasta"] = Path(d["seed_fasta"])
+        d["work_dir"] = Path(d["work_dir"])
+        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
 
 def compute_binding_capacity(df: pd.DataFrame) -> pd.DataFrame:
@@ -101,3 +121,21 @@ def run_pipeline(cfg: PipelineConfig) -> dict[str, Path]:
         "top_csv": top_csv,
         "plot_png": plot_png,
     }
+
+
+def main_cli() -> None:
+    """Run pipeline from CLI: python -m pipeline_runner <config.json>"""
+    if len(sys.argv) < 2:
+        print("Usage: python -m pipeline_runner <config.json>", file=sys.stderr)
+        sys.exit(1)
+    config_path = Path(sys.argv[1])
+    if not config_path.exists():
+        print(f"Config file not found: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    with open(config_path) as f:
+        cfg = PipelineConfig.from_dict(json.load(f))
+    run_pipeline(cfg)
+
+
+if __name__ == "__main__":
+    main_cli()

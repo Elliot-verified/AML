@@ -2,6 +2,8 @@
 
 A scientist can configure pipeline parameters (topk, max_len, fraction_mask, n_variants_per_seed, etc.) and run the pipeline from a browser.
 
+**Avoiding timeouts:** The pipeline runs in a **background subprocess**, so the page does not stay open for the full run. After you click **Run pipeline**, the app returns immediately. Use the **Check for results** section (same page) and enter the run folder name (e.g. `web_run`) to see when the run is done and download outputs. Logs are written to `pipeline_runs/<run_name>/run_stdout.txt` and `run_stderr.txt`.
+
 ## Troubleshooting
 
 ### `ValueError: numpy.dtype size changed, Expected 96 from C header, got 88`

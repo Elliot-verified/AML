@@ -6,11 +6,16 @@ then run the pipeline and download results.
 Run from project root (AML_Final_Project-master):
   streamlit run streamlit_app.py
 
+Pipeline runs in a background subprocess so the page does not time out.
+Use "Check for results" to see output when ready.
+
 Requires: PepMLM_local, MetaLATTE and ESM2 dirs (see WEB_APP.md).
 """
-from pathlib import Path
-import tempfile
+import json
+import subprocess
 import sys
+import tempfile
+from pathlib import Path
 from typing import Optional
 
 import streamlit as st
@@ -139,11 +144,15 @@ run_dir_name = st.text_input(
 
 st.divider()
 
+if "pipeline_work_dir" not in st.session_state:
+    st.session_state.pipeline_work_dir = None
+
 if st.button("Run pipeline", type="primary", use_container_width=True):
     if seed_path is None or not Path(seed_path).exists():
         st.error("Please choose or upload a seed FASTA first.")
     else:
         work_dir = PIPELINE_RUNS / run_dir_name
+        work_dir.mkdir(parents=True, exist_ok=True)
         cfg = PipelineConfig(
             seed_fasta=Path(seed_path),
             work_dir=work_dir,
@@ -154,35 +163,58 @@ if st.button("Run pipeline", type="primary", use_container_width=True):
             batch_size=batch_size,
             top_k=top_k,
         )
-        with st.spinner("Running pipeline (PepMLM → MetaLATTE → analysis). This may take a few minutes."):
-            try:
-                outputs = run_pipeline(cfg)
-            except Exception as e:
-                st.exception(e)
-                st.stop()
+        config_file = work_dir / "run_config.json"
+        with open(config_file, "w") as f:
+            json.dump(cfg.to_dict(), f, indent=2)
+        with open(work_dir / "run_stdout.txt", "w") as out, open(work_dir / "run_stderr.txt", "w") as err:
+            proc = subprocess.Popen(
+                [sys.executable, "-m", "pipeline_runner", str(config_file)],
+                cwd=str(PROJECT_ROOT),
+                stdout=out,
+                stderr=err,
+            )
+        st.session_state.pipeline_work_dir = work_dir
+        st.session_state.pipeline_process = proc
+        st.success(f"Pipeline started in the background (run folder: `{run_dir_name}`). It may take several minutes. Click **Check for results** below to see when it's done.")
 
-        st.success("Pipeline complete.")
+st.divider()
+st.subheader("Check for results")
 
-        df_top = pd.read_csv(outputs["top_csv"])
-        st.subheader("Top variants by binding capacity")
+# Allow checking a specific run folder (default: last started)
+check_dir_name = st.text_input("Run folder to check", value=run_dir_name, key="check_run_dir")
+check_dir = PIPELINE_RUNS / check_dir_name
+
+if check_dir.exists():
+    top_csv = check_dir / "top_variants.csv"
+    plot_png = check_dir / "plots" / "top_binding_capacity.png"
+    if top_csv.exists() and plot_png.exists():
+        st.success("Pipeline completed. Showing results.")
+        df_top = pd.read_csv(top_csv)
         st.dataframe(df_top, use_container_width=True)
-
-        st.subheader("Binding capacity plot")
-        st.image(str(outputs["plot_png"]), use_container_width=True)
-
-        st.subheader("Download results")
+        st.image(str(plot_png), use_container_width=True)
         d1, d2, d3, d4 = st.columns(4)
+        gen_fasta = check_dir / "generated_variants.fasta"
+        pred_csv = check_dir / "metalatte_predictions.csv"
         with d1:
-            with open(outputs["generated_fasta"]) as f:
-                st.download_button("Generated variants (FASTA)", f.read(), file_name="generated_variants.fasta")
+            if gen_fasta.exists():
+                with open(gen_fasta) as f:
+                    st.download_button("Generated variants (FASTA)", f.read(), file_name="generated_variants.fasta", key="dl_fasta")
         with d2:
-            with open(outputs["predictions_csv"]) as f:
-                st.download_button("MetaLATTE predictions (CSV)", f.read(), file_name="metalatte_predictions.csv")
+            if pred_csv.exists():
+                with open(pred_csv) as f:
+                    st.download_button("MetaLATTE predictions (CSV)", f.read(), file_name="metalatte_predictions.csv", key="dl_pred")
         with d3:
-            with open(outputs["top_csv"]) as f:
-                st.download_button("Top variants (CSV)", f.read(), file_name="top_variants.csv")
+            with open(top_csv) as f:
+                st.download_button("Top variants (CSV)", f.read(), file_name="top_variants.csv", key="dl_top")
         with d4:
-            with open(outputs["plot_png"], "rb") as f:
-                st.download_button("Plot (PNG)", f.read(), file_name="top_binding_capacity.png")
-
-        st.caption(f"Outputs also saved under: `{work_dir}`")
+            with open(plot_png, "rb") as f:
+                st.download_button("Plot (PNG)", f.read(), file_name="top_binding_capacity.png", key="dl_plot")
+        st.caption(f"Outputs saved under: `{check_dir}`")
+    else:
+        proc = st.session_state.get("pipeline_process")
+        if proc is not None and st.session_state.get("pipeline_work_dir") == check_dir and proc.poll() is None:
+            st.info("Pipeline still running. Refresh this page or click **Check for results** again in a few minutes.")
+        else:
+            st.warning("No results yet for this run. If you just started the pipeline, wait a few minutes and check again. You can also look at the run folder for logs: `run_stdout.txt` and `run_stderr.txt`.")
+else:
+    st.info("Enter a run folder name (e.g. web_run) and we'll look for results under `pipeline_runs/`.")
